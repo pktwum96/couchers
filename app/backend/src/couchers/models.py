@@ -1661,7 +1661,7 @@ class EventOccurrence(Base):
 
 class EventSubscription(Base):
     """
-    users subscriptions to events
+    Users' subscriptions to events
     """
 
     __tablename__ = "event_subscriptions"
