@@ -684,7 +684,7 @@ def media_session(bearer_token):
             server.stop(None).wait()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="class")
 def testconfig():
     prevconfig = config.copy()
     config.clear()
