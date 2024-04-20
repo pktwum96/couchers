@@ -23,8 +23,7 @@
     "confirm_password": "Confirmer le mot de passe",
     "title": "Changer de mot de passe",
     "old_password": "Ancien mot de passe",
-    "new_password": "Nouveau mot de passe",
-    "password_mismatch_error": ""
+    "new_password": "Nouveau mot de passe"
   },
   "basic_sign_up_form": {
     "existing_user_prompt": "Déjà inscrit·e ? <2>Se connecter</2>",
