@@ -1,3 +1,6 @@
+import grpc
+
+from couchers import errors
 from couchers.db import session_scope
 from couchers.models import HostingStatus, MeetupStatus, Notification, User
 from couchers.sql import couchers_select as select
@@ -33,6 +36,8 @@ class Notifications(notifications_pb2_grpc.NotificationsServicer):
     def SetNotificationSettings(self, request, context):
         with session_scope() as session:
             user = session.execute(select(User).where(User.id == context.user_id)).scalar_one()
+            if user.do_not_email:
+                context.abort(grpc.StatusCode.FAILED_PRECONDITION, errors.DO_NOT_EMAIL_CANNOT_ENABLE_NEW_NOTIFICATIONS)
             user.new_notifications_enabled = request.enable_new_notifications
         return notifications_pb2.SetNotificationSettingsRes()
 

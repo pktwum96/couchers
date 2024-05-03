@@ -1,5 +1,7 @@
+import grpc
 import pytest
 
+from couchers import errors
 from couchers.models import HostingStatus, MeetupStatus, User
 from couchers.sql import couchers_select as select
 from proto import notifications_pb2
@@ -64,6 +66,20 @@ def test_SetNotificationSettings(db):
     with session_scope() as session:
         user = session.execute(select(User)).scalar_one()
         assert not user.new_notifications_enabled
+
+
+def test_notifications_do_not_email(db):
+    _, token = generate_user()
+
+    with notifications_session(token) as notifications:
+        notifications.SetDoNotEmail(notifications_pb2.SetDoNotEmailReq(enable_do_not_email=True))
+
+        with pytest.raises(grpc.RpcError) as e:
+            notifications.SetNotificationSettings(
+                notifications_pb2.SetNotificationSettingsReq(enable_new_notifications=True)
+            )
+        assert e.value.code() == grpc.StatusCode.FAILED_PRECONDITION
+        assert e.value.details() == errors.DO_NOT_EMAIL_CANNOT_ENABLE_NEW_NOTIFICATIONS
 
 
 def test_GetDoNotEmail(db):
