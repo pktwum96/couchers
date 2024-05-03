@@ -1,6 +1,6 @@
 import pytest
 
-from couchers.models import User
+from couchers.models import HostingStatus, MeetupStatus, User
 from couchers.sql import couchers_select as select
 from proto import notifications_pb2
 from tests.test_fixtures import db, generate_user, notifications_session, session_scope, testconfig  # noqa
@@ -64,3 +64,61 @@ def test_SetNotificationSettings(db):
     with session_scope() as session:
         user = session.execute(select(User)).scalar_one()
         assert not user.new_notifications_enabled
+
+
+def test_GetDoNotEmail(db):
+    _, token = generate_user()
+
+    with session_scope() as session:
+        user = session.execute(select(User)).scalar_one()
+        user.do_not_email = False
+
+    with notifications_session(token) as notifications:
+        res = notifications.GetDoNotEmail(notifications_pb2.GetDoNotEmailReq())
+    assert not res.do_not_email_enabled
+
+    with session_scope() as session:
+        user = session.execute(select(User)).scalar_one()
+        user.do_not_email = True
+        user.hosting_status = HostingStatus.cant_host
+        user.meetup_status = MeetupStatus.does_not_want_to_meetup
+        user.new_notifications_enabled = False
+
+    with notifications_session(token) as notifications:
+        res = notifications.GetDoNotEmail(notifications_pb2.GetDoNotEmailReq())
+    assert res.do_not_email_enabled
+
+
+def test_SetDoNotEmail(db):
+    _, token = generate_user()
+
+    with session_scope() as session:
+        user = session.execute(select(User)).scalar_one()
+        user.do_not_email = False
+        user.hosting_status = HostingStatus.can_host
+        user.meetup_status = MeetupStatus.wants_to_meetup
+        user.new_notifications_enabled = True
+
+    with notifications_session(token) as notifications:
+        notifications.SetDoNotEmail(notifications_pb2.SetDoNotEmailReq(enable_do_not_email=False))
+
+    with session_scope() as session:
+        user = session.execute(select(User)).scalar_one()
+        assert not user.do_not_email
+
+    with notifications_session(token) as notifications:
+        notifications.SetDoNotEmail(notifications_pb2.SetDoNotEmailReq(enable_do_not_email=True))
+
+    with session_scope() as session:
+        user = session.execute(select(User)).scalar_one()
+        assert user.do_not_email
+        assert user.hosting_status == HostingStatus.cant_host
+        assert user.meetup_status == MeetupStatus.does_not_want_to_meetup
+        assert user.new_notifications_enabled == False
+
+    with notifications_session(token) as notifications:
+        notifications.SetDoNotEmail(notifications_pb2.SetDoNotEmailReq(enable_do_not_email=False))
+
+    with session_scope() as session:
+        user = session.execute(select(User)).scalar_one()
+        assert not user.do_not_email
