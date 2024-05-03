@@ -87,9 +87,6 @@ message GetAccountInfoRes {
 
   // the user's timezone name identifier, derived from their coordinates, for example "Australia/Melbourne"
   string timezone = 6;
-
-  // whether the user has all non-security emails off
-  bool do_not_email = 10;
 }
 
 message ChangePasswordReq {
