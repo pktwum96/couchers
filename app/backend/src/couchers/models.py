@@ -274,6 +274,9 @@ class User(Base):
     # This column will be removed in the future when notifications are enabled for everyone and come out of preview
     new_notifications_enabled = Column(Boolean, nullable=False, server_default=text("false"))
 
+    # whether this user has all emails turned off
+    do_not_email = Column(Boolean, nullable=False, server_default=text("false"))
+
     avatar = relationship("Upload", foreign_keys="User.avatar_key")
 
     __table_args__ = (
@@ -330,6 +333,11 @@ class User(Base):
         CheckConstraint(
             "((undelete_token IS NULL) = (undelete_until IS NULL)) AND ((undelete_token IS NULL) OR is_deleted)",
             name="undelete_nullity",
+        ),
+        # If the user disabled all emails, then they can't host or meet up
+        CheckConstraint(
+            "(do_not_email IS FALSE) OR ((hosting_status = 'cant_host') AND (meetup_status = 'does_not_want_to_meetup'))",
+            name="do_not_email_inactive",
         ),
     )
 
