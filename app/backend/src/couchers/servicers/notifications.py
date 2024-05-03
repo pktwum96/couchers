@@ -1,5 +1,5 @@
 from couchers.db import session_scope
-from couchers.models import Notification, User
+from couchers.models import HostingStatus, MeetupStatus, Notification, User
 from couchers.sql import couchers_select as select
 from couchers.utils import Timestamp_from_datetime
 from proto import notifications_pb2, notifications_pb2_grpc
@@ -48,7 +48,7 @@ class Notifications(notifications_pb2_grpc.NotificationsServicer):
             if request.enable_do_not_email:
                 user.new_notifications_enabled = False
                 user.hosting_status = HostingStatus.cant_host
-                user.meetup_status = HostingStatus.does_not_want_to_meetup
+                user.meetup_status = MeetupStatus.does_not_want_to_meetup
         return notifications_pb2.SetDoNotEmailRes()
 
     def ListNotifications(self, request, context):
